@@ -1,0 +1,73 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>a-guile-mind.github.io</title>
+    <link rel="stylesheet" href="/static/css/normalize.css" />
+    <link rel="stylesheet" href="/static/css/app.css" />
+</head>
+
+<body>
+    <div id="background"><video poster="/static/video/poster.jpeg" autoplay="t" loop="t">
+            <source src="/static/video/space.ogv" type="video/ogg" />
+            <source src="/static/video/space.mp4" type="video/mp4" />
+            <source src="/static/video/space.webm" type="video/webm" /></video></div>
+    <div id="overlay"></div>
+    <div id="container">
+        <h1><a href="a-guile-mind.github.io">a-guile-mind.github.io</a></h1>
+        <div>
+            <h1>neon</h1>
+            <p><em>a versioned datastore that takes inspiration from git</em></p>
+            <h2>Getting started</h2>
+            <p>To get started I made a <a href="neon.scm">small prototype in GNU Guile</a> to
+                see what are the difficulties that I will encounter. The performance
+                bottleneck relates to fetching the latest triple given a <code>SUBJECT</code> and
+                <code>PREDICATE</code> ie.:</p>
+            <pre><code class="language-scheme">(ref tx subject predicate)</code></pre>
+            <p>The problem can be expressed as follow:</p>
+            <ul>
+                <li>
+                    <p>Given a Direct-Acyclic-Graph (DAG) as <code>history</code> that records
+                        transactions <code>tx</code> that change the database,</p>
+                </li>
+                <li>
+                    <p>Given <code>SUBJECT</code>, <code>PREDICATE</code> and <code>TX</code>,</p>
+                </li>
+                <li>
+                    <p>Only one <code>OBJECT</code> can be identified possibly denoting that the
+                        triple doesn&apos;t exist in that version of the database.</p>
+                </li>
+            </ul>
+            <p>The API offered by wiredtiger allows to efficently retrieve <em>all the
+                    versions</em> of a triple identified by <code>SUBJECT</code> and <code>PREDICATE</code>. Given
+                <code>history</code> is a DAG there is no <em>total order</em> defined. <em>That is, if the
+                    <code>history</code> was linear it would be trivial to <code>ref</code> the correct triple</em>.
+                <code>history</code> write access of a given <em>branch</em> is linear/serial, it&apos;s
+                enforced by a lock (because otherwise it much more difficult to do
+                anything). Since <code>ref</code> operation happens at a given <code>tx</code>, it also
+                means that it happens in a single branch. In that branch, that is
+                still a DAG, we can implement a total order by doing the same thing
+                that <code>git rebase</code> does, that is linearize the DAG and number each
+                transaction starting form the first transaction as if they happened in
+                that order. This is not true, but for transactions for which that
+                matters there is later <em>merge</em> transaction that fix it, and since
+                <code>ref</code> always look for the most recent transaction, it won&apos;t <em>see</em> a
+                broken state of database and see the <em>merge</em> transaction first.</p>
+            <h2>References</h2>
+            <ul>
+                <li><a href="ldow2013-paper-01.pdf">R&amp;Wbase: Git for triples</a></li>
+                <li><a href="10.1.1.662.1619.pdf">R43ples: Revisions for Triples</a></li>
+                <li><a
+                        href="https://books.google.fr/books?id=E40BCgAAQBAJ&amp;lpg=PA171&amp;ots=nPLpSAysXj&amp;lr&amp;pg=PA185#v=onepage&amp;q&amp;f=false">Collaborative
+                        Open Data versioning: A Pragmatic Approach Using Linked Data</a>. Good
+                    overview of the problem that must be tackled and listing of variouos
+                    solutions.</li>
+            </ul>
+        </div>
+        <footer>
+            <p><small>2014-2018 - Amirouche Boubekki - cc-by-nc-sa</small></p>
+        </footer>
+    </div>
+</body>
+
+</html>

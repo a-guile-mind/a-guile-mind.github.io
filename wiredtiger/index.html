@@ -1,0 +1,486 @@
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>guile-wiredtiger</title>
+  <link rel="stylesheet" href="/static/css/normalize.css" />
+  <link rel="stylesheet" href="/static/css/markdown.css" />
+</head>
+
+<body>
+  <article class="markdown-body entry-content p-5" itemprop="text">
+    <h1 id="guile-wiredtiger">guile-wiredtiger</h1>
+    <h2 id="status">Status</h2>
+    <p>The database bindings are stable but incomplete. The higher level abstractions are in flux.</p>
+    <h2 id="build-your-own-database">Build your own database</h2>
+    <ul>
+      <li>ACID</li>
+      <li>NoSQL</li>
+      <li>networkless</li>
+      <li>automatic index</li>
+      <li>multithread support</li>
+      <li>ordered key/value store</li>
+    </ul>
+    <p>It's similar to leveldb, rocksdb and bsddb. The creator of wiredtiger did previously code bsddb now part of
+      oracle.</p>
+    <p>It only works on 64bit systems.</p>
+    <p>At the very core, it's a configurable ordered key/value store, column aware, with global transactions.</p>
+    <p>It's not a cache database like REDIS.</p>
+    <p>It's more powerful than RDBMS model and can implement it.</p>
+    <p>The low level API allows to create tables (!) with two kind of columns: key columns and value columns (somewhat
+      like cassandra). Then you can lookup entries in the database using the key with search procedures. There is two
+      kinds of search procedure. One does exact match of the whole key columns, the other does an approximate match,
+      where you lookup for a key prefix (This is actuallly very useful). Once you have a pointer to an entry in the
+      table you can navigate it quickly using next and previous procedures (remember the table is ordered).</p>
+    <p>There is higher level abstractions like a graphdb with gremlin-like querying, a feature space with microkanren
+      querying and an inverted index for looking up words in documents.</p>
+    <h2 id="informations">Informations</h2>
+    <ul>
+      <li>Tested with <a href="https://www.gnu.org/software/guile/">GNU Guile</a> <strong>2.2</strong></li>
+      <li>Tested with <a href="http://wiredtiger.com">wiredtiger</a> <strong>2.9.1</strong></li>
+      <li>License: GPL2+ (same as wiredtiger)</li>
+      <li>Join us at <strong>irc.freenode.net#guile</strong> for support.</li>
+      <li>Mailling list: <a href="https://www.gnu.org/software/guile/community.html">guile-users</a></li>
+      <li>Author: <a href="mailto:amirouche@hypermove.net">amirouche</a></li>
+    </ul>
+    <h2 id="use-modules-wiredtiger"><code>(use-modules (wiredtiger))</code></h2>
+    <p>Create the <code>/tmp/wt</code> directory before running the following example:</p>
+    <div class="sourceCode">
+      <pre class="sourceCode scheme"><code class="sourceCode scheme">(<span class="kw">define</span><span class="fu"> connection </span>(pk (connection-open <span class="st">&quot;/tmp/wt&quot;</span> <span class="st">&quot;create&quot;</span>)))
+(<span class="kw">define</span><span class="fu"> session </span>(pk (session-open connection)))
+
+<span class="co">;; create a table</span>
+(session-create session <span class="st">&quot;table:nodes&quot;</span> <span class="st">&quot;key_format=i,value_format=S&quot;</span>)
+
+<span class="co">;; open a cursor over that table</span>
+(<span class="kw">define</span><span class="fu"> cursor </span>(pk (cursor-open session <span class="st">&quot;table:nodes&quot;</span>)))
+
+<span class="co">;; start a transaction and add a record</span>
+(session-transaction-begin session <span class="st">&quot;isolation=</span><span class="ch">\&quot;</span><span class="st">snapshot</span><span class="ch">\&quot;</span><span class="st">&quot;</span>)
+(cursor-key-set cursor <span class="dv">42</span>)
+(cursor-value-set cursor <span class="st">&quot;The one true number!&quot;</span>)
+(cursor-insert cursor)
+(session-transaction-commit session)
+
+(cursor-reset cursor)
+(cursor-next cursor)
+(pk (cursor-key-ref cursor))
+(pk (cursor-value-ref cursor))
+(cursor-close cursor)
+(session-close session)
+(connection-close connection)</code></pre>
+    </div>
+    <h2 id="getting-started">Getting started</h2>
+    <p>wiredtiger <strong>does not work on 32 bits architectures</strong>.</p>
+    <p>It was tested with wiredtiger <code>2.9.1</code>.</p>
+    <p>On guix you can simply install wiredtiger with:</p>
+    <pre><code>guix package -i wiredtiger</code></pre>
+    <p>Otherwise I recommend to install it from git with the usual cli dance:</p>
+    <pre><code>git clone https://github.com/wiredtiger/wiredtiger.git
+cd wiredtiger
+./autogen.sh &amp;&amp; ./configure &amp;&amp; make &amp;&amp; make install</code></pre>
+    <p>And then clone <code>guile-wiredtiger</code>:</p>
+    <pre><code>git clone git@git.framasoft.org:a-guile-mind/guile-wiredtiger.git</code></pre>
+    <p>You also need version <strong>2.2</strong> of <a href="https://www.gnu.org/software/guile/">GNU Guile</a></p>
+    <h2 id="how-to-contribute">How to contribute</h2>
+    <p>Send me a <a href="mailto:amirouche@hypermove.net">mail</a>.</p>
+    <h2 id="changelog">ChangeLog</h2>
+    <ul>
+      <li>
+        <p>0.6.1 (2017/05)</p>
+      </li>
+      <li>Fix licence headers</li>
+      <li>Move tests to their own modules</li>
+      <li>grf3 now use feature space</li>
+      <li>move all the documentation into README.md</li>
+      <li>
+        <p>create a website</p>
+      </li>
+      <li>
+        <p>0.6 (2017/05)</p>
+      </li>
+      <li>
+        <p>...</p>
+      </li>
+      <li>
+        <p>0.5</p>
+      </li>
+      <li>
+        <p>wiredtiger</p>
+        <ul>
+          <li>support raw column</li>
+          <li>support custom collator (unstable)</li>
+        </ul>
+      </li>
+      <li>
+        <p>wiredtigerz</p>
+        <ul>
+          <li>fix cursor-range (upstream bug)</li>
+          <li>add <code>with-context</code> form which set the <code>*context*</code> fluid. The immediate consequence
+            is that you don't need to spawn yourself sessions and pass them around.</li>
+          <li>add <code>(with-cursor cursor proc)</code> procedure which unwrap the current context and retrieve the
+            named <code>CURSOR</code>. This is useful when you use <code>with-context</code> to avoid to manually
+            retrieve the fluid etc.</li>
+        </ul>
+      </li>
+      <li>
+        <p>0.3</p>
+      </li>
+      <li>add graphitisay which provides graph primitives on top of wiredtiger</li>
+      <li>uav: API change: <code>(uav-update! uid assoc)</code></li>
+      <li>uav: API change: <code>uav-ref*</code> doesn't include the uid in the returned assoc</li>
+      <li>uav: add a simple database server</li>
+      <li>
+        <p>wiredtigerz: <code>cursor-insert*</code> return row record number when applicable</p>
+      </li>
+    </ul>
+    <h2 id="tutorial">Tutorial</h2>
+    <h2 id="reference-api">Reference API</h2>
+    <h3 id="wiredtiger-wiredtiger"><code>(wiredtiger wiredtiger)</code></h3>
+    <p><code>wiredtiger.scm</code> contains the low level bindings of WiredTiger. It tries to follow as closely as
+      possible the semantic offered by WiredTiger without flourish. As matter of fact, it's recommend to read WiredTiger
+      manual, starting with “<a href="http://source.wiredtiger.com/develop/programming.html">Writing WiredTiger
+        applications</a>” and “<a href="http://source.wiredtiger.com/develop/schema.html">Schema, Columns, Column
+        Groups, Indices and Projections</a>”.</p>
+    <p>WiredTiger has three primary concepts represented as Scheme record:</p>
+    <ol style="list-style-type: decimal">
+      <li><code>&lt;connection&gt;</code> represent a single connection to a WiredTiger database. ACID doesn't work
+        across instance of <code>&lt;connection&gt;</code>.</li>
+      <li><code>&lt;session&gt;</code> has a <code>&lt;connection&gt;</code> as parent. It's not threadsafe <em>but can
+          be passed from threads to threads, as long as a single thread access it at once</em>.</li>
+      <li><code>&lt;cursor&gt;</code> has a <code>&lt;session&gt;</code> as parent.</li>
+    </ol>
+    <h4 id="connection"><code>&lt;connection&gt;</code></h4>
+    <h5 id="connection-open-home-config-connection"><code>(connection-open home config) → &lt;connection&gt;</code></h5>
+    <p>Open a connection to a database. Most applications will open a single connection to a database. A connection can
+      be shared among several threads. There is no support for ACID transactions between several connections.</p>
+    <p>Example:</p>
+    <div class="sourceCode">
+      <pre
+        class="sourceCode scheme"><code class="sourceCode scheme">(connection-open <span class="st">&quot;/tmp/magic-numbers&quot;</span> <span class="st">&quot;create,cache_size=1G&quot;</span>)</code></pre>
+    </div>
+    <p><code>HOME</code> is the path to the database home directory, it must exists. <code>CONFIG</code> is
+      configuration as described in <a
+        href="http://source.wiredtiger.com/develop/classcom_1_1wiredtiger_1_1db_1_1wiredtiger.html#a41881fa91c0b8820ad8a9f5bb91950f8">WiredTiger
+        documentation</a>.</p>
+    <h5 id="connnection-close-connection-config"><code>(connnection-close connection [config])</code></h5>
+    <p>Close connection. Any open sessions will be closed. <code>CONFIG</code> optional argument, that can be
+      <code>leak_memory</code> to not free memory during close.</p>
+    <h4 id="session"><code>&lt;session&gt;</code></h4>
+    <h5 id="session-open-connection-config-session"><code>(session-open connection [config]) → &lt;session&gt;</code>
+    </h5>
+    <p>Open a session.</p>
+    <p>All data operations are performaed in the context of a session. This encapsulates the thread and transactional
+      context of the operation.</p>
+    <p>Thread safety: A session is not usually shared between threads, see <a
+        href="http://source.wiredtiger.com/develop/threads.html">Multithreading</a> for more information.</p>
+    <p>Example:</p>
+    <div class="sourceCode">
+      <pre
+        class="sourceCode scheme"><code class="sourceCode scheme">(session-open connection <span class="st">&quot;isolation=snapshot&quot;</span>)</code></pre>
+    </div>
+    <p><code>CONFIG</code> configures isolation level:</p>
+    <ul>
+      <li><code>read-uncommited</code>: transactions can see changes made by other transactions before those
+        transactions are committed. Dirty reads, non-repeatable reads and phantoms are possible</li>
+      <li><code>read-commited</code>: transactionns cannot see changes made by other transactions before those
+        transactioins are committed. Dirtyreads are not possible. Committed changes from concurrent transactions become
+        visible when no cursor is positioned in the read-commited transaction.</li>
+      <li><code>snapshot</code>:transactions read the versions of records committed before the transaction started.
+        Dirty reads and non-repeatable reads are not possible; phantoms are possible.</li>
+    </ul>
+    <p>If you don't know what you are doing use <code>snapshot</code>.</p>
+    <h5 id="session-close-session"><code>(session-close session)</code></h5>
+    <p>Close the session handle. This will release the resources associated with the session handle, including rolling
+      back any active transactions and closing any cursors that remain open in the session.</p>
+    <h5 id="session-create-session-name-config"><code>(session-create session name  config)</code></h5>
+    <p>Create a table, column group, index or file.</p>
+    <p>Example:</p>
+    <div class="sourceCode">
+      <pre
+        class="sourceCode scheme"><code class="sourceCode scheme">(session-create session <span class="st">&quot;table:magic-numbers&quot;</span> <span class="st">&quot;key_format=i,value_format=S&quot;</span>)</code></pre>
+    </div>
+    <p><code>NAME</code> the URI of the object to create , such as <code>table:magic-numbers</code>.</p>
+    <p><code>CONFIG</code> configures the object, see <a
+        href="http://source.wiredtiger.com/develop/struct_w_t___s_e_s_s_i_o_n.html#a358ca4141d59c345f401c58501276bbb">WiredTiger
+        documentation</a> for mor information.</p>
+    <h5 id="session-transaction-begin-session-config"><code>(session-transaction-begin session [config])</code></h5>
+    <p>Start a transaction.</p>
+    <h5 id="session-transaction-commit-session-config"><code>(session-transaction-commit session [config])</code></h5>
+    <p>Commit the current transaction. A transaction must be in progress when this method is called.</p>
+    <h5 id="session-transaction-rollback-session-config"><code>(session-transaction-rollback session [config])</code>
+    </h5>
+    <p>Rollback the current transaction. A transaction must be in progress when this method is called. All cursors are
+      reset.</p>
+    <h4 id="cursor"><code>&lt;cursor&gt;</code></h4>
+    <h5 id="cursor-open-session-uri-config-cursor"><code>(cursor-open session uri config) → &lt;cursor&gt;</code></h5>
+    <p>Open a new cursor on a data source. Cursor handles should be discarded by calling <code>cursor-close</code>.</p>
+    <p>Cursors capable of supporting transactional operations operate in the context of the current transaction, if any.
+    </p>
+    <p><code>session-transaction-rollback</code> implicitly resets all cursors.</p>
+    <p>Cursors are relatively lightweight objects but may hold referencs to heavier weight objects; applications should
+      re-use cursors when possible, but instantiating new cursors is not so expensive that applications need to cache
+      cursors at all costs.</p>
+    <p><code>URI</code> is the data source on which the cursor operates; cursors are usually opened on tables, however,
+      cursors can be opened on any data source, regardless of whether it is ultimately stored in a table. Some cursor
+      types may have limited functionality (for example, they may be read-only or not support transactional updates).
+    </p>
+    <p>See <a
+        href="http://source.wiredtiger.com/develop/struct_w_t___s_e_s_s_i_o_n.html#afb5b4a69c2c5cafe411b2b04fdc1c75d">WiredTiger
+        documentation</a>.</p>
+    <h5 id="cursor-key-set-cursor-.-key"><code>(cursor-key-set cursor . key)</code></h5>
+    <h5 id="cursor-value-set-cursor-.-value"><code>(cursor-value-set cursor . value)</code></h5>
+    <p>Set the key (or value) for the next operation. If an error occurs during this operation, a flag will be set in
+      the cursor, and the next operation to access the key (or value) will fail. This simplifies error handling in
+      applications.</p>
+    <p><code>KEY</code> (or <code>VALUE</code>) must be coherent with the format of the current object key.</p>
+    <h5 id="cursor-key-ref-cursor-list"><code>(cursor-key-ref cursor) → list</code></h5>
+    <h5 id="cursor-value-ref-cursor-list"><code>(cursor-value-ref cursor) → list</code></h5>
+    <p>Get the key (or value) for the current row.</p>
+    <h5 id="cursor-next-cursor"><code>(cursor-next cursor)</code></h5>
+    <h5 id="cursor-previous-cursor"><code>(cursor-previous cursor)</code></h5>
+    <p>Move the cursor to the next (resp. previous) row.</p>
+    <h5 id="cursor-reset-cursor"><code>(cursor-reset cursor)</code></h5>
+    <p>Reset the position of the cursor. Any resources held by the cursor are released, and the cursor's key and
+      position are no longer valid. A subsequent iterationn with <code>cursor-next</code> will move to the first record
+      or with <code>cursor-previous</code> will move to the last record.</p>
+    <h5 id="cursor-search-cursor"><code>(cursor-search cursor)</code></h5>
+    <p>On success move the cursor to the row matching the key. The key must first be set.</p>
+    <p>To minize cursor resources, the <code>cursor-reset</code> method should be caelled as soon as the record has been
+      retrieved and the cursor no longer needs that position.</p>
+    <h5 id="cursor-search-near-cursor--1-0-1"><code>(cursor-search-near cursor) → -1, 0, 1</code></h5>
+    <p>Return the row matching the ky if it exists, or an adjacent row. An adjacent row is either the smallest record
+      larger than the key or the largest record smaller than the key (in other words, a logically adjacent key). The key
+      must first be set.</p>
+    <p>On success, the cursqor ends positioned at the returned record; to minize cursor resoources, the
+      <code>cursor-reset</code> method should be called as soon as the record has been retrieved and the cursor no
+      longer needs that position.</p>
+    <h5 id="cursor-insert-cursor"><code>(cursor-insert cursor)</code></h5>
+    <p>Insert a record and optionally update an existing record.</p>
+    <p>If the cursor was configured with <code>overwrite=true</code> (the default), both the key and value must be set;
+      if the record already exists, the key's value will be updated, otherwise, the record will be inserted.</p>
+    <p>If the cursor was configured with <code>overwrite=false</code>, both the key and value must be set and the record
+      must not already exist; the record will be inserted.</p>
+    <p>If a cursor with record number keys was configured with <code>append=true</code> (not the default), the value
+      must be set; a new record will be appended and the record number set as the cursor key value.</p>
+    <p>The cursor ends with no position, and a subsequent call to the cursor-next <code>cursor-prev</code> method will
+      iterate from the beginning (end)of the table.</p>
+    <p>Inserting a new record after the current maximum record in a fixed-length bit field column-store (that is, a
+      store with an r type key and t type value) may implicitly create the missing records as records with a value of 0.
+    </p>
+    <p>When loading a large amount of data into a new object, using a cursor with the bulk configuration string enabled
+      and loading the data in sorted order will be much faster than doing out-of-order inserts. See Bulk-load for more
+      information.</p>
+    <p>The maximum length of a single column stored in a table is not fixed (as it partially depends on the underlying
+      file configuration), but is always a small number of bytes less than 4GB.</p>
+    <h5 id="cursor-update-cursor"><code>(cursor-update cursor)</code></h5>
+    <p>Update a record and optionally insert an existing record.</p>
+    <p>If the cursor was configured with <code>overwrite=true</code> (the default), both the key and value must be set;
+      if the record already exists, the key's value will be updated, otherwise, the record will be inserted.</p>
+    <p>If the cursor was configured with <code>overwrite=false</code>, both the key and value must be set and the record
+      must already existe; the record will be updated.</p>
+    <p>On success, the cursor ends positioned at the modified record; to minimize cursor resources, the cursor-reset
+      method should be called as soon as the cursor no longer needs that position.</p>
+    <p>The maximum length of a single column stored in a table is not fixed (as it partially depends on the underlying
+      file configuration), but is always a small number of bytes less than 4GB. One example of a text record of a blockchain transaction. Let's say that the dogecoin blockchain has the size of 35 GB and it grows constantly gaining speed, this is facilitated by the <a href="https://coindataflow.com/en/currency/dogecoin">coindataflow</a> exchange rate.</p>
+    <h5 id="cursor-remove-cursor"><code>(cursor-remove cursor)</code></h5>
+    <p>Remove a record. The key must be set.</p>
+    <p>If the cursor was configured with <code>overwrite=true</code> (the default), the key must be set; the key's
+      record will be removed if it exists, no error will be returned if the record does not exist.</p>
+    <p>If the cursor was configured with <code>overwrite=false</code>, the key must be set and the key's record must
+      exist; the record will be removed.</p>
+    <p>Removing a record in a fixed-length bit field column-store (that is, a store with an <code>r</code> type key and
+      t type value) is identical to setting the record's value to 0.</p>
+    <p>On success, the cursor ends positioned at the removed record; to minimize cursor resources, the cursor-reset
+      method should be called as soon as the cursor no longer needs that position.</p>
+    <h3 id="wiredtiger-extra"><code>(wiredtiger extra)</code></h3>
+    <p>wiredtigerz gathers extra procedures to work with WiredTiger which aims to make the main workflow more obvious.
+    </p>
+    <p>It implements a declarative API to create tables with their indices annd open cursors on them. It provides a few
+      helpers for common patterns.</p>
+    <h4 id="declarative-api">Declarative API</h4>
+    <p>Several procedure take declarative specification of tables in <code>wiredtigerz</code> called
+      <code>CONFIG</code>. The syntax of this configuration list is the following:</p>
+    <div class="sourceCode">
+      <pre class="sourceCode scheme"><code class="sourceCode scheme">(table-name 
+    (key <span class="kw">assoc</span> as (column-name . column-type))
+    (value <span class="kw">assoc</span> as (column-name . column-type)) ((<span class="kw">list</span> indices as
+    (indexed-name (indexed keys) (projections column name)))))</code></pre>
+    </div>
+    <p><code>column-type</code> is a verbose name for column types:</p>
+    <ul>
+      <li><code>record</code></li>
+      <li><code>string</code></li>
+      <li><code>unsigned-integer</code></li>
+      <li><code>integer</code></li>
+      <li><code>raw</code></li>
+    </ul>
+    <p>An example of a configuration that defines a <code>posts</code> table with <code>uid</code>, <code>title</code>,
+      <code>body</code>, <code>published-at</code> fields and one index on <code>published-at</code> with a projection
+      on <code>uid</code> column will look like the following:</p>
+    <p>
+      <code>scheme (define posts '(posts ((uid . raw) ((title . string) (body . string) (published-at . unsigned-integer)) ((published-at (published-at) (uid)))))</code>
+    </p>
+    <h5 id="session-create-session-.-configs"><code>(session-create* session . configs)</code></h5>
+    <p>You can create a table with indices using <code>session-create*</code>:</p>
+    <div class="sourceCode">
+      <pre class="sourceCode scheme"><code class="sourceCode scheme">(<span class="kw">define</span><span class="fu"> connection </span>(connection-open <span class="st">&quot;/tmp/wiredtigerz&quot;</span> <span class="st">&quot;create&quot;</span>))
+(<span class="kw">define</span><span class="fu"> session </span>(session-open connection)) 
+(session-create* session posts) 
+(session-close session)</code></pre>
+    </div>
+    <h5 id="cursor-open-session-.-configs"><code>(cursor-open* session . configs)</code></h5>
+    <p><code>cursor-open*</code> will open all the cursors related to a given <code>CONFIGS</code> as an assoc:</p>
+    <div class="sourceCode">
+      <pre class="sourceCode scheme"><code class="sourceCode scheme">(<span class="kw">define</span><span class="fu"> connection </span>(connection-open <span class="st">&quot;/tmp/wt&quot;</span> <span class="st">&quot;create&quot;</span>))
+(<span class="kw">define</span><span class="fu"> sessionn </span>(session-open connection)) 
+(<span class="kw">define</span><span class="fu"> cursors </span>(cursor-open* session posts))</code></pre>
+    </div>
+    <p><code>cursors</code> is an assoc that maps table name and indices as symbol to their cursor. An extra “append”
+      cursor will be created if the table has a single key record column. Index and append cursors are prefixed with the
+      table name. Which means that the above <code>cursors</code> will contain the following keys:</p>
+    <ul>
+      <li><code>posts</code></li>
+      <li><code>posts-append</code></li>
+      <li><code>posts-published-at</code></li>
+    </ul>
+    <p>Mind the fact that keys are symbols. Also <code>posts-published-at</code> cursor has <code>uid</code> as cursor's
+      value since it's has a projection.</p>
+    <h5 id="wiredtiger-open-path-.-configs"><code>(wiredtiger-open path . configs)</code></h5>
+    <p>Open a database at <code>PATH</code>, create tables using <code>CONFIGS</code> and return a pair:</p>
+    <ul>
+      <li><code>(connection . session)</code></li>
+      <li><code>cursors</code> assoc as returned by <code>cursor-open*</code></li>
+    </ul>
+    <p>This procedure is useful when you don't plan to use threads.</p>
+    <h5 id="wiredtiger-close-database"><code>(wiredtiger-close database)</code></h5>
+    <p>Shortcut procedure to close a database where <code>DATABASE</code> is pair of <code>connection</code> and
+      <code>session</code>.</p>
+    <h5 id="env-open-path-configs-dbconfig"><code>(env-open* path configs dbconfig)</code></h5>
+    <p>In the case where you want to use the database with multiple threads there are few helpers that starts with
+      <code>env-open*</code>.</p>
+    <p>This introduce another record type called <code>&lt;env&gt;</code>. It will create a database at
+      <code>PATH</code> using <code>DBCONFIG</code> as connection connfiguration string. <code>CONFIGS</code> is the
+      tables specification dubbed declarative API described above.</p>
+    <h5 id="with-context-env-body-..."><code>(with-context env body ...)</code></h5>
+    <p>This form will create a database <em>context</em> (see below) and set it as current database context using a
+      fluid so that you don't have to pass around the context everywhere.</p>
+    <p>This form should be called once per thread. Doing otherwise will lead to unspecified behavior.</p>
+    <h5 id="call-wih-cursor-cursor-proc"><code>(call-wih-cursor cursor  proc)</code></h5>
+    <p>Retrieve the current context and the associated cursor named <code>CURSOR</code> and call <code>PROC</code> with
+      it.</p>
+    <h4 id="context">Context</h4>
+    <p>Context is made of a <code>&lt;session&gt;</code> and cursors assoc. This is useful in multithread settings if
+      you don't need to open multiple cursors for the same table.</p>
+    <h5 id="context-open-connection-.-configs"><code>(context-open connection . configs)</code></h5>
+    <p><code>cursor-open*</code> sister procedure that will open a session and cursors assoc and return a context.</p>
+    <h5 id="context-session-context"><code>(context-session context)</code></h5>
+    <p>Return the session associated with <code>CONTEXT</code>.</p>
+    <h5 id="context-ref-context-name"><code>(context-ref context name)</code></h5>
+    <p>Return the cursor <code>NAME</code> from <code>CONTEXT</code>.</p>
+    <h4 id="transactions">Transactions</h4>
+    <p>Use <code>(context-begin context)</code>, <code>(context-commit context)</code> and
+      <code>(context-rollback context)</code> to work with transactions.</p>
+    <h4 id="cursors">Cursors</h4>
+    <h5 id="cursor-value-ref-cursor-.-key"><code>(cursor-value-ref* cursor . key)</code></h5>
+    <p>Retrieve the value associated with <code>KEY</code> in <code>CURSOR</code>.</p>
+    <h5 id="cursor-insert-cursor-key-value"><code>(cursor-insert* cursor key value)</code></h5>
+    <p>Insert <code>VALUE</code> at <code>KEY</code> using <code>CURSOR</code>. If the cursor <code>key_format</code> is
+      a single record column, <code>KEY</code> can be <code>'()</code>.</p>
+    <h5 id="cursor-update-cursor-key-value"><code>(cursor-update* cursor key value)</code></h5>
+    <p>Update <code>KEY</code> with <code>VALUE</code> using <code>CURSOR</code>.</p>
+    <h5 id="cursor-remove-cursor-.-key"><code>(cursor-remove* cursor . key)</code></h5>
+    <p>Remove <code>KEY</code> using <code>CURSOR</code>.</p>
+    <h5 id="cursor-search-cursor-.-key"><code>(cursor-search* cursor . key)</code></h5>
+    <p>Search <code>KEY</code> using <code>CURSOR</code>.</p>
+    <h5 id="cursor-search-near-cursor-.-key-prefix"><code>(cursor-search-near* cursor . key-prefix)</code></h5>
+    <p>Prepare <code>CURSOR</code> for forward search using <code>KEY-PREFIX</code>.</p>
+    <h5 id="cursor-range-cursor-key-prefix"><code>(cursor-range cursor key-prefix)</code></h5>
+    <p>Return the list of key/value paris that match <code>KEY-PREFIX</code> using <code>CURSOR</code>.</p>
+    <h3 id="wiredtiger-feature-space"><code>(wiredtiger feature-space)</code></h3>
+    <p><code>feature-space</code> is perhaps to most schemey database built using wiredtiger, it's not persistent but it
+      expose a very simple with a low barrier of entry and a high level interface for querying the data using minikanren
+      (actually microkanren).</p>
+    <h5 id="feature-space"><code>*feature-space*</code></h5>
+    <p>feature-space tables declaration.</p>
+    <h5 id="fsdebug"><code>(fs:debug)</code></h5>
+    <p>Print all the content of the feature-space.</p>
+    <h5 id="fsref-uid-key"><code>(fs:ref uid key)</code></h5>
+    <p>Retrieve the value associated with <code>UID</code> and <code>KEY</code>.</p>
+    <h5 id="fsref-uid"><code>(fs:ref* uid)</code></h5>
+    <p>Retrieve the assoc at <code>UID</code>.</p>
+    <h5 id="fsadd-assoc"><code>(fs:add! assoc)</code></h5>
+    <p>Add <code>ASSOC</code> to the database and return its uid.</p>
+    <h5 id="fsremove-uid"><code>(fs:remove! uid)</code></h5>
+    <p>Remove from the database the assoc associated with <code>UID</code>.</p>
+    <h5 id="fsupdate-uid-assoc"><code>(fs:update! uid assoc)</code></h5>
+    <p>Update the assoc found at <code>UID</code> with <code>ASSOC</code>.</p>
+    <h5 id="fsfind-key-value"><code>(fs:find key value)</code></h5>
+    <p>Find uids which have both <code>KEY</code> and <code>VALUE</code> in their assoc.</p>
+    <h5 id="fsquery-...-fswhere-..."><code>(fs:query ... fs:where ...)</code></h5>
+    <p>This is the high level interface for query the feature-space. Here is an example use:</p>
+    <div class="sourceCode">
+      <pre
+        class="sourceCode scheme"><code class="sourceCode scheme">(fs:query uid? fs:where ((uid? &#39;age <span class="dv">32</span>) (uid? &#39;firstname <span class="st">&quot;amirouche&quot;</span>)))</code></pre>
+    </div>
+    <p>Intermediate variables must have two <code>?</code> as suffix. This is useful in the context where you want to do
+      somekind of join.</p>
+    <h3 id="wiredtiger-grf3"><code>(wiredtiger grf3)</code></h3>
+    <p><code>grf3</code> is graph database interface built with a navigational stream interface to query the graph
+      similar to Gremlin from Tinkerpop. It's my prefered way to interact with data.</p>
+    <h4 id="get-uid"><code>(get uid)</code></h4>
+    <p>Retrieve the object at <code>UID</code>.</p>
+    <h4 id="create-vertex-assoc"><code>(create-vertex assoc)</code></h4>
+    <p>Create a vertex with <code>ASSOC</code> and return a <code>&lt;vertex&gt;</code> record.</p>
+    <h4 id="vertex-set-vertex-key-value"><code>(vertex-set vertex key value)</code></h4>
+    <p>Create a new vertex record where <code>KEY</code> is set to <code>VALUE</code> based on <code>VERTEX</code>.</p>
+    <h4 id="vertex-ref-vertex-key"><code>(vertex-ref vertex key)</code></h4>
+    <p>Retrieve the value associated with <code>KEY</code> in <code>VERTEX</code>.</p>
+    <h4 id="create-edge-start-end-assoc"><code>(create-edge start end assoc)</code></h4>
+    <p>Create an edge starting at vertex <code>START</code> and endinig at vertex <code>END</code> using
+      <code>ASSOC</code>.</p>
+    <h4 id="edge-start-edge"><code>(edge-start edge)</code></h4>
+    <h4 id="edge-end-edge"><code>(edge-end edge)</code></h4>
+    <h4 id="edge-set-edge-key-value"><code>(edge-set edge key value)</code></h4>
+    <h4 id="edge-ref-edge-key"><code>(edge-ref edge key)</code></h4>
+    <h4 id="save-vertex-or-edge"><code>(save vertex-or-edge)</code></h4>
+    <p>Save <code>VERTEX-OR-EDGE</code> to database.</p>
+    <h4 id="traversi-framework"><code>traversi</code> framework</h4>
+    <p>This is similar to stream module except it's faster and you can backtrack.</p>
+    <ul>
+      <li><code>list-&gt;traversi</code></li>
+      <li><code>traversi-&gt;list</code></li>
+      <li><code>traversi-car</code></li>
+      <li><code>traversi-cdr</code></li>
+      <li><code>traversi-map</code></li>
+      <li><code>traversi-for-each</code></li>
+      <li><code>traversi-filter</code></li>
+      <li><code>traversi-backtrack</code></li>
+      <li><code>traversi-take</code></li>
+      <li><code>traversi-drop</code></li>
+      <li><code>traversi-paginator</code></li>
+      <li><code>traversi-length</code></li>
+      <li><code>traversi-scatter</code></li>
+      <li><code>traversi-unique</code></li>
+      <li><code>traversi-group-count</code></li>
+    </ul>
+    <p><code>traversi</code> framework can be used outside <code>grf3</code> library if you'd want.</p>
+    <p>There is a few helpers made to make it easier to work with both <code>grf3</code> and <code>traversi</code>.</p>
+    <ul>
+      <li><code>vertices</code></li>
+      <li><code>edges</code></li>
+      <li><code>from</code></li>
+      <li><code>where?</code></li>
+      <li><code>key</code></li>
+      <li><code>key?</code></li>
+      <li><code>incomings</code></li>
+      <li><code>outgoings</code></li>
+      <li><code>start</code></li>
+      <li><code>end</code></li>
+    </ul>
+    <h4 id="get-or-create-vertex-key-value"><code>(get-or-create-vertex key value)</code></h4>
+    <p>Get or create a vertex where <code>KEY</code> is set to <code>VALUE</code>.</p>
+</article>
+</body>
+
+</html>

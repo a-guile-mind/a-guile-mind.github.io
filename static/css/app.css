@@ -1,0 +1,101 @@
+@import url(http://web.archive.org/web/20171009235859cs_/https://fonts.googleapis.com/css?family=Orbitron);
+
+/* BASICS */
+
+body {
+    font-family: sans;
+    font-size: 18px;
+    color: white;
+    margin: 15px;
+}
+
+h1 {
+    font-family: Orbitron, sans;
+    font-weight: normal;
+    color: white;
+    text-align: left;
+}
+
+h2, h3, h4, h5, h6 {
+    font-family: sans;
+    font-weight: normal;
+}
+
+p > code, pre {
+    background: hsla(0,0%,100%,0.1);
+    font-size: 0.8em;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+pre {
+    padding: 10px;
+}
+
+a:link,
+a:hover,
+a:visited,
+a:active {
+    color: white;
+}
+
+/* BACKGROUND */
+
+#background video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    background: url(/web/20171009235859im_/http://hyperdev.fr/static/css/video/poster.jpeg) no-repeat;
+    background-size: cover;
+}
+
+@media screen and (max-device-width: 800px) {
+    body { background: url(/web/20171009235859im_/http://hyperdev.fr/static/video/poster.jpeg) #000 no-repeat center center fixed;}
+    #background { display: none; }
+}
+
+/* SHELL */
+
+#container {
+    background: hsla(0, 0%, 0%, 0.9);
+    background: url("/web/20171009235859im_/http://hyperdev.fr/static/video/overlay.png");
+    width: 600px;
+    margin: auto;
+    margin-top: 15px;
+    padding: 15px;
+    text-align: justify;
+    line-height: 1.6em;
+    border: 2px solid white;
+    border-radius: 3px;
+}
+
+/*
+     FILE ARCHIVED ON 23:58:59 Oct 09, 2017 AND RETRIEVED FROM THE
+     INTERNET ARCHIVE ON 13:25:42 Aug 01, 2020.
+     JAVASCRIPT APPENDED BY WAYBACK MACHINE, COPYRIGHT INTERNET ARCHIVE.
+
+     ALL OTHER CONTENT MAY ALSO BE PROTECTED BY COPYRIGHT (17 U.S.C.
+     SECTION 108(a)(3)).
+*/
+/*
+playback timings (ms):
+  esindex: 0.033
+  captures_list: 1426.908
+  xauthn.chkprivs: 0.07
+  PetaboxLoader3.resolve: 93.719
+  LoadShardBlock: 1020.952 (3)
+  RedisCDXSource: 271.788
+  xauthn.identify: 111.075
+  exclusion.robots.policy: 111.582
+  load_resource: 188.894
+  CDXLines.iter: 19.052 (3)
+  exclusion.robots: 111.595
+  PetaboxLoader3.datanode: 840.99 (4)
+*/
